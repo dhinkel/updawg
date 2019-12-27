@@ -55,27 +55,46 @@ Yeah, science!
 TODO: find an existing DAG framework
 """
 
-import abc
-import copy
-
-
-#%%
-
-
 
 
 # TODO: connect subcomponents, so that outputs go to the correct inputs
 # TODO: register subcomponents to a parent, so that parent's .run method
 #       calls children's .run methods in correct order
 
+import abc
+import copy
 
-class DataComponent:
+
+#%%
+
+class PrettyReprBaseClass:
     '''
-    Base class for other data analysis classes
+    Implements __repr__ to return "MyClass(*args, **kwargs)"
     '''
     def __init__(self, *args, **kwargs):
         self._args = copy.deepcopy(args)
         self._kwargs = copy.deepcopy(kwargs)
+
+    def __repr__(self):
+        parg_list = [str(arg) for arg in self._args]
+
+        kwarg_list = [f'{key}={str(val)}' for key, val in self._kwargs.items()]
+        arg_list = parg_list + kwarg_list
+        arg_str = ", ".join(arg_list)
+
+        class_name = self.__class__.__name__
+        repr_str = f'{class_name}({arg_str})'
+        return repr_str
+
+
+
+#%%
+class DataComponent(PrettyReprBaseClass):
+    '''
+    Base class for other data analysis classes
+    '''
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self._inputs = []
         self._outputs = []
