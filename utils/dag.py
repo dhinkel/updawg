@@ -150,9 +150,9 @@ class NodeMapping(bases.PrettyReprBaseClass):
         self._node_indices = {}
         self.adj_matrix = np.zeros([0,0], dtype=int)
 
-        self._accounting()
+        self.update()
 
-    def _accounting(self):
+    def update(self):
         self._count_all_nodes()
         self._map_nodes_to_indices()
         self._create_adjacency_matrix()
@@ -250,15 +250,12 @@ def tmp():
 class DiGraph(bases.PrettyReprBaseClass):
 
     def __init__(self, node_mapping=None, **kwargs):
-        self.update_node_mapping(node_mapping)
-
-    def update_node_mapping(self, node_mapping, **kwargs):
         self.node_mapping = NodeMapping(node_mapping)
 
+    def update_node_mapping(self, **kwargs):
+        self.node_mapping.update()
 
     def add_node(self, node=None, parents=None, children=None, **kwargs):
-        node_mapping = self.node_mapping
-
         parent_nodes = NodeSet(parents)
         child_nodes  = NodeSet(children)
 
@@ -271,34 +268,30 @@ class DiGraph(bases.PrettyReprBaseClass):
                               children=[node],
                               update_node_mapping=False)
 
-        self.update_node_mapping(node_mapping)
+        self.update_node_mapping()
 
     def add_parents(self, node=None, parents=None, **kwargs):
-        node_mapping = self.node_mapping
-
         for parent in parents:
             self.add_children(node=parent,
                               children=node,
                               update_node_mapping=False)
 
-        self.update_node_mapping(node_mapping)
+        self.update_node_mapping()
 
 
     def remove_parents(self, node=None, parents=None, **kwargs):
-        node_mapping = self.node_mapping
-
         for parent in parents:
             self.remove_children(node=parent,
                                  children=[node],
                                  update_node_mapping=False)
 
-        self.update_node_mapping(node_mapping)
+        self.update_node_mapping()
 
     def add_children(self, node=None, children=None, update_node_mapping=True, **kwargs):
         node_mapping = self.node_mapping
 
         if node not in node_mapping:
-            node_mapping[node] = children
+            node_mapping[node] = NodeSet(children)
         else:
             child_nodes = node_mapping[node]
 
@@ -306,7 +299,7 @@ class DiGraph(bases.PrettyReprBaseClass):
                 child_nodes.add(children)
 
         if update_node_mapping:
-            self.update_node_mapping(node_mapping)
+            self.update_node_mapping()
 
     def remove_children(self, node=None, children=None, update_node_mapping=True, **kwargs):
         node_mapping = self.node_mapping
@@ -318,7 +311,7 @@ class DiGraph(bases.PrettyReprBaseClass):
                 child_nodes.remove(this_child)
 
         if update_node_mapping:
-            self.update_node_mapping(node_mapping)
+            self.update_node_mapping()
 
 
     def has_cycles(self):
@@ -338,6 +331,28 @@ class DiGraph(bases.PrettyReprBaseClass):
 #
 #        self.
 
+#%%
+
+class DataDAG:
+
+    def __init__(self, node_mapping=None, **kwargs):
+        self.digraph = DiGraph(node_mapping=node_mapping)
+        assert not self.digraph.has_cycles()
+
+    def set_inputs(self, **kwargs):
+        pass
+
+        #
+
+
+    def set_outputs(self, **kwargs):
+        pass
+
+    def run(self, **kwargs):
+        node_mapping = self.digraph.node_mapping
+
+        # call component.run() for each component whose parents' .run() is complete
+        # probably some async thing?
 
 
 #%%

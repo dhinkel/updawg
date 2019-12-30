@@ -6,6 +6,24 @@ Created on Tue Dec 24 22:49:44 2019
 @author: dh
 
 
+
+The goal is to have an easy-to-use framework that forces tool developers to
+design with modularity in mind, and ultimately lead to more component re-use.
+
+For example, an existing plotting tool might have significant overlap with a
+new ready-to-be-written tool for aggregating metrics, but the existing tool
+could be written in such a way that code re-use would be more work than writing
+something from scratch.
+
+Suppose instead that the plotting tool had the following design:
+            Extractor   ->  Processor   ->  PlotHandler
+Then the metric-aggregating tool could reuse the existing Extractor and
+Processor component, and only need a new MetricAggregator component. The new
+tool would follow this design:
+            Extractor   ->  Processor   ->  MetricAggregator
+
+
+
 This started as a framework for data analysis tools, which tend to follow (or
 have components that follow) certain patterns.
 
@@ -34,25 +52,8 @@ all be subclasses of DataComponent, which add (resp.) .extract, .process, and
 (and similarly for MyDataProcessor and MyDataHandler).
 
 
-The goal is to have an easy-to-use framework that forces tool developers to
-design with modularity in mind, and ultimately lead to more component re-use.
-
-For example, an existing plotting tool might have significant overlap with a
-new ready-to-be-written tool for aggregating metrics, but the existing tool
-could be written in such a way that code re-use would be more work than writing
-something from scratch.
-
-Suppose instead that the plotting tool had the following design:
-            Extractor   ->  Processor   ->  PlotHandler
-Then the metric-aggregating tool could reuse the existing Extractor and
-Processor component, and only need a new MetricAggregator component. The new
-tool would follow this design:
-            Extractor   ->  Processor   ->  MetricAggregator
-
-Yeah, science!
 
 
-TODO: find an existing DAG framework
 """
 
 
@@ -98,27 +99,13 @@ class DataComponent(PrettyReprBaseClass):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._inputs = []
-        self._outputs = []
+        self._inputs = {}
+        self._outputs = {}
 
         self.configure(*args, **kwargs)
 
     def configure(self, *args, **kwargs):
         pass
-
-    def __repr__(self):
-        args = self._args
-        kwargs = self._kwargs
-        cls = self.__class__.__name__
-
-        parg_list = list(args)
-        kwarg_list = [f'{key}={val}' for key, val in kwargs.items()]
-
-        arg_list = parg_list + kwarg_list
-        arg_str = ", ".join(arg_list)
-
-        repr_str = f'{cls}({arg_str})'
-        return repr_str
 
     def __str__(self):
         pass
