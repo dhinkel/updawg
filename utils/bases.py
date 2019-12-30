@@ -67,12 +67,14 @@ import copy
 
 #%%
 
+# TODO: when the object is modified, show the args for the updates
+
 class PrettyReprBaseClass:
     '''
     Implements __repr__ to return "MyClass(*args, **kwargs)"
     '''
     def __init__(self, *args, **kwargs):
-        self._args = copy.deepcopy(args)
+        self._args = args
         self._kwargs = copy.deepcopy(kwargs)
 
     def __repr__(self):
