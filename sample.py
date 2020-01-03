@@ -50,6 +50,8 @@ class MyHandler(components.DataHandlerBase):
         self.plot_another_something(*args, **kwargs)
 
     def plot_something(self, *args, **kwargs):
+        file_name = kwargs.pop('file_name', '')
+
         data = self.inputs['df']
 
         x_data = data['x']
@@ -59,16 +61,26 @@ class MyHandler(components.DataHandlerBase):
 
         ax.plot(x_data, y_data)
 
+        if file_name:
+            self.save_fig(fig, file_name, **kwargs)
+
+
+    def save_fig(self, fig, file_name, **kwargs):
+        fig.savefig(file_name, **kwargs)
 
 
 
 
-class MyPipeline(components.DataPipelineBase):
+
+class MyPipeline(components.DataPipeline):
 
     def configure(self, *args, **kwargs):
-        self.extractor  = MyExtractor()
+        self.extractor  = MyExtractor(*args, **kwargs)
         self.processor  = MyProcessor()
         self.handler    = MyHandler()
+
+
+
 
 
 
@@ -77,7 +89,7 @@ class MyPipeline(components.DataPipelineBase):
 def run_pipeline(file_name=None):
 
     inputs = dict(file_name=file_name)
-    output_kwargs = dict(save_figs=False)
+    output_kwargs = dict(file_name='')
 
     pipeline = MyPipeline(**inputs)
 

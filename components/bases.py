@@ -116,26 +116,13 @@ class DataComponent(PrettyReprBaseClass):
         #
         # TODO: figure out how to do this dynamically
 
-
-
-#%%
-
-class DataObject_ABC(abc.ABC):
-    '''
-    Abstract base class for other data analysis classes
-    '''
-    def __init__(self, *args, **kwargs):
-        self.configure(*args, **kwargs)
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    @abc.abstractmethod
     def run(self, *args, **kwargs):
         pass
 
+
+
 #%%
-class DataExtractorBase(DataObject_ABC):
+class DataExtractorBase(DataComponent):
     '''
     Extract raw data into a format the processor can use
     '''
@@ -152,7 +139,7 @@ class DataExtractorBase(DataObject_ABC):
         print('extracting data')
 
 #%%
-class DataProcessorBase(DataObject_ABC):
+class DataProcessorBase(DataComponent):
     '''
     Process the data
     '''
@@ -169,7 +156,7 @@ class DataProcessorBase(DataObject_ABC):
         print('processing data')
 
 #%%
-class DataHandlerBase(DataObject_ABC):
+class DataHandlerBase(DataComponent):
     '''
     Do something with the processed data
     '''
@@ -185,58 +172,58 @@ class DataHandlerBase(DataObject_ABC):
         ''' Define this in the subclass '''
         print('handling data')
 
-#%%
-class DataPipelineBase(DataObject_ABC):
-    '''
-    Represents a common data analysis pattern:
-            Extractor -> Processor -> Handler
-    '''
-    def configure(self, *args, **kwargs):
-        ''' Define this in the subclass '''
-        self.extractor  = DataExtractorBase()
-        self.processor  = DataProcessorBase()
-        self.handler    = DataHandlerBase()
-
-    def extract_data(self, *args, **kwargs):
-        self.extractor.extract_data(*args, **kwargs)
-
-    def process_data(self, *args, **kwargs):
-        self.processor.process_data(*args, **kwargs)
-
-    def handle_data(self, *args, **kwargs):
-        self.handler.handle_data(*args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        self.extractor.run(*args, **kwargs)
-        self.processor.run(*args, **kwargs)
-        self.handler.run(*args, **kwargs)
-
-#%%
-class DataManagerBase(DataObject_ABC):
-    '''
-    Contains DataPipeline objects
-    '''
-    def configure(self, *args, **kwargs):
-        ''' Define this in the subclass '''
-        self.pipelines = {}
-        self.pipelines['1st'] = DataPipelineBase(*args, **kwargs)
-        self.pipelines['2nd'] = DataPipelineBase(*args, **kwargs)
-        self.pipelines['3rd'] = DataPipelineBase(*args, **kwargs)
-
-    def extract_data(self, *args, **kwargs):
-        for pipeline in self.pipelines.values():
-            pipeline.extract_data(*args, **kwargs)
-
-    def process_data(self, *args, **kwargs):
-        for pipeline in self.pipelines.values():
-            pipeline.process_data(*args, **kwargs)
-
-    def handle_data(self, *args, **kwargs):
-        for pipeline in self.pipelines.values():
-            pipeline.handle_data(*args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        for pipeline in self.pipelines.values():
-            pipeline.run(*args, **kwargs)
+##%%
+#class DataPipelineBase(DataObject_ABC):
+#    '''
+#    Represents a common data analysis pattern:
+#            Extractor -> Processor -> Handler
+#    '''
+#    def configure(self, *args, **kwargs):
+#        ''' Define this in the subclass '''
+#        self.extractor  = DataExtractorBase()
+#        self.processor  = DataProcessorBase()
+#        self.handler    = DataHandlerBase()
+#
+#    def extract_data(self, *args, **kwargs):
+#        self.extractor.extract_data(*args, **kwargs)
+#
+#    def process_data(self, *args, **kwargs):
+#        self.processor.process_data(*args, **kwargs)
+#
+#    def handle_data(self, *args, **kwargs):
+#        self.handler.handle_data(*args, **kwargs)
+#
+#    def run(self, *args, **kwargs):
+#        self.extractor.run(*args, **kwargs)
+#        self.processor.run(*args, **kwargs)
+#        self.handler.run(*args, **kwargs)
+#
+##%%
+#class DataManagerBase(DataObject_ABC):
+#    '''
+#    Contains DataPipeline objects
+#    '''
+#    def configure(self, *args, **kwargs):
+#        ''' Define this in the subclass '''
+#        self.pipelines = {}
+#        self.pipelines['1st'] = DataPipelineBase(*args, **kwargs)
+#        self.pipelines['2nd'] = DataPipelineBase(*args, **kwargs)
+#        self.pipelines['3rd'] = DataPipelineBase(*args, **kwargs)
+#
+#    def extract_data(self, *args, **kwargs):
+#        for pipeline in self.pipelines.values():
+#            pipeline.extract_data(*args, **kwargs)
+#
+#    def process_data(self, *args, **kwargs):
+#        for pipeline in self.pipelines.values():
+#            pipeline.process_data(*args, **kwargs)
+#
+#    def handle_data(self, *args, **kwargs):
+#        for pipeline in self.pipelines.values():
+#            pipeline.handle_data(*args, **kwargs)
+#
+#    def run(self, *args, **kwargs):
+#        for pipeline in self.pipelines.values():
+#            pipeline.run(*args, **kwargs)
 
 
