@@ -13,71 +13,85 @@ import updawg.components as components
 
 #%%
 
-class MyExtractor(components.DataExtractorBase):
 
-    def configure(self, *args, **kwargs):
-        self.header_row = 15
+class MyDataExtractor(components.DataExtractorBase):
 
-    def extract(self, *args, **kwargs):
-        file_name = kwargs.pop('file_name', None)
+    def extract_data(self, *args, **kwargs):
+        print(args)
+        print(kwargs)
+        file_in = kwargs.pop('file_in', None)
+        print(f'file_in = {file_in}')
 
-        file_data = pd.read_csv(file_name, header=self.header_row)
+        file_data = pd.read_json(file_in)
 
-        self.outputs['raw'] = file_data
+        self.outputs = file_data
 
-class MyProcessor(components.DataProcessorBase):
+#%%
+class MyDataProcessor(components.DataProcessorBase):
 
-    def configure(self, *args, **kwargs):
-        pass
+    def process_data(self, *args, **kwargs):
+        df = self.inputs
 
-    def process(self, *args, **kwargs):
-        inputs = self.inputs
-
-        df = inputs['df']
+        df_out = pd.DataFrame(df)
 
         # do the processing
+        alt_km  = df['altitude']
 
-        self.outputs['df'] = df
+        df_out['alt_m'] = alt_km * 1000
 
-class MyHandler(components.DataHandlerBase):
+        self.outputs = df_out
+
+#%%
+class MyDataHandler(components.DataHandlerBase):
 
     def configure(self, *args, **kwargs):
-        pass
+        self.label_dict = dict(time='Time (s)',
+                               alt_m='Altitude (m)'
+                               )
 
-    def handle(self, *args, **kwargs):
+    def handle_data(self, *args, **kwargs):
         self.plot_something(*args, **kwargs)
-        self.plot_something_else(*args, **kwargs)
-        self.plot_another_something(*args, **kwargs)
 
     def plot_something(self, *args, **kwargs):
-        file_name = kwargs.pop('file_name', '')
+        file_out = kwargs.pop('file_out', '')
 
-        data = self.inputs['df']
+        data = self.inputs
 
-        x_data = data['x']
-        y_data = data['y']
+        x_var = 'time'
+        y_var = 'alt_m'
 
-        fig, ax = plt.subplots(111)
+        x_data = data[x_var]
+        y_data = data[y_var]
+
+        x_label = self.label_dict[x_var]
+        y_label = self.label_dict[y_var]
+
+        fig, ax = plt.subplots(1,1)
 
         ax.plot(x_data, y_data)
 
-        if file_name:
-            self.save_fig(fig, file_name, **kwargs)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+
+        title = f'{x_label} vs {y_label}'
+        ax.set_title(title)
+
+        fig.tight_layout()
+
+        if file_out:
+            self.save_fig(fig, file_out, **kwargs)
+
+    def save_fig(self, fig, file_out, **kwargs):
+        fig.savefig(file_out, **kwargs)
 
 
-    def save_fig(self, fig, file_name, **kwargs):
-        fig.savefig(file_name, **kwargs)
 
-
-
-
-
-class MyPipeline(components.DataPipeline):
+class MyDataPipeline(components.DataPipeline):
 
     def configure(self, *args, **kwargs):
-        self.extractor  = MyExtractor(*args, **kwargs)
-        self.processor  = MyProcessor()
-        self.handler    = MyHandler()
+        self.extractor  = MyDataExtractor()
+        self.processor  = MyDataProcessor()
+        self.handler    = MyDataHandler()
 
 
 
@@ -88,17 +102,20 @@ class MyPipeline(components.DataPipeline):
 
 def run_pipeline(file_name=None):
 
-    inputs = dict(file_name=file_name)
-    output_kwargs = dict(file_name='')
+    kwargs = dict(file_in=file_name,
+                  file_out='')
 
-    pipeline = MyPipeline(**inputs)
+    print(kwargs)
 
-    pipeline.run(**output_kwargs)
+    pipeline = MyDataPipeline()
+
+#    pipeline.run(**kwargs)
 
 
 
 def main():
-    file_name = '/path/to/file'
+    file_name = '/mnt/d/Repos/Telemetry-Data/TESS/JSON/analysed.json'
+    return
 
     run_pipeline(file_name=file_name)
 

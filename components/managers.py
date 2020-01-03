@@ -15,10 +15,8 @@ from updawg.utils import map_parallel
 class DataManagerBase(bases.DataComponent):
 
     def __init__(self, *args, **kwargs):
-        self.is_parallel = kwargs.pop('is_parallel', False)
-
         super().__init__(*args, **kwargs)
-        self.components = bases.ComponentList()
+        self.components = bases.DataComponentList()
 
 
 class DataManagerParallel(DataManagerBase):
@@ -29,47 +27,55 @@ class DataManagerParallel(DataManagerBase):
         outputs = map_parallel(inputs=self._inputs,
                                functions=funcs_for_loop)
 
-        self._outputs = outputs
+        self.outputs = outputs
 
 class DataManagerSerial(DataManagerBase):
 
     def run(self, *args, **kwargs):
-        this_input = self._inputs
+        next_input = self.inputs
         for component in self.components:
-            component._inputs = this_input
-            this_output = component.run(this_input)
-            this_input = this_output
+            component.inputs = next_input
+            component.run(*args, **kwargs)
+            next_input = component.outputs
 
-        self._outputs = this_output
+        self.outputs = next_input
 
 
-
+_cls = bases.DataComponent
 
 class DataPipeline(DataManagerSerial):
 
+    components = bases.DataComponentList()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        cls = bases.DataComponent
+        self.components = bases.DataComponentList(cls(), cls(), cls())
+
     @property
     def extractor(self):
-        return self._components[0]
+        return self.components[0]
 
     @extractor.setter
     def extractor(self, val):
         assert isinstance(val, bases.DataExtractorBase)
-        self._components[0] = val
+        self.components[0] = val
 
     @property
     def processor(self):
-        return self._components[1]
+        return self.components[1]
 
     @processor.setter
     def processor(self, val):
         assert isinstance(val, bases.DataProcessorBase)
-        self._components[1] = val
+        self.components[1] = val
 
     @property
     def handler(self):
-        return self._components[2]
+        return self.components[2]
 
     @handler.setter
     def handler(self, val):
         assert isinstance(val, bases.DataHandlerBase)
-        self._components[2] = val
+        self.components[2] = val
