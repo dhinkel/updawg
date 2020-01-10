@@ -33,3 +33,15 @@ def obj_iter_to_str(obj_list, iter_type=list):
 
 obj_list_to_str = functools.partial(obj_iter_to_str, iter_type=list)
 obj_set_to_str = functools.partial(obj_iter_to_str, iter_type=set)
+
+
+
+def is_hashable(obj):
+    try:
+        hash(obj)
+    except TypeError:
+        output = False
+    else:
+        output = True
+
+    return output

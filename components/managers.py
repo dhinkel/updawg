@@ -19,6 +19,7 @@ class DataManagerBase(bases.DataComponent):
         self.components = bases.DataComponentList()
 
 
+
 class DataManagerParallel(DataManagerBase):
 
     def run(self, *args, **kwargs):
@@ -29,53 +30,106 @@ class DataManagerParallel(DataManagerBase):
 
         self.outputs = outputs
 
-class DataManagerSerial(DataManagerBase):
-
-    def run(self, *args, **kwargs):
-        next_input = self.inputs
-        for component in self.components:
-            component.inputs = next_input
-            component.run(*args, **kwargs)
-            next_input = component.outputs
-
-        self.outputs = next_input
-
-
-_cls = bases.DataComponent
-
-class DataPipeline(DataManagerSerial):
-
-    components = bases.DataComponentList()
+class DataPipeline(DataManagerBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        print(args)
+        for arg in args:
+            if isinstance(arg, bases.DataComponent):
+                self.components.append(arg)
 
-        cls = bases.DataComponent
-        self.components = bases.DataComponentList(cls(), cls(), cls())
+        self.connect_components()
 
-    @property
-    def extractor(self):
-        return self.components[0]
+    def connect_components(self, *args, **kwargs):
+        comp = self.components
+        for a, b in zip(comp, comp[1:]):
+            b._inputs.point_to(a._outputs)
 
-    @extractor.setter
-    def extractor(self, val):
-        assert isinstance(val, bases.DataExtractorBase)
-        self.components[0] = val
+        self._inputs.point_to(self.components[0]._inputs)
+        self._outputs.point_to(self.components[-1]._outputs)
 
-    @property
-    def processor(self):
-        return self.components[1]
+    def run(self, *args, **kwargs):
+        '''
+        Assumes that component.run sets its .outputs at the end
+        '''
+        for component in self.components:
+            component.run(*args, **kwargs)
 
-    @processor.setter
-    def processor(self, val):
-        assert isinstance(val, bases.DataProcessorBase)
-        self.components[1] = val
 
-    @property
-    def handler(self):
-        return self.components[2]
 
-    @handler.setter
-    def handler(self, val):
-        assert isinstance(val, bases.DataHandlerBase)
-        self.components[2] = val
+
+#class DataPipeline(DataManagerSerial):
+#
+#    components = bases.DataComponentList()
+#
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#
+#        cls = bases.DataComponent
+#        self.components = bases.DataComponentList(cls(), cls(), cls())
+#
+#    @property
+#    def extractor(self):
+#        return self.components[0]
+#
+#    @extractor.setter
+#    def extractor(self, val):
+#        assert isinstance(val, bases.DataComponent)
+#        self.components[0] = val
+#
+#    @property
+#    def processor(self):
+#        return self.components[1]
+#
+#    @processor.setter
+#    def processor(self, val):
+#        assert isinstance(val, bases.DataComponent)
+#        self.components[1] = val
+#
+#    @property
+#    def handler(self):
+#        return self.components[2]
+#
+#    @handler.setter
+#    def handler(self, val):
+#        assert isinstance(val, bases.DataComponent)
+#        self.components[2] = val
+
+#
+#class DataPipeline(DataManagerSerial):
+#
+#    components = bases.DataComponentList()
+#
+#    def __init__(self, *args, **kwargs):
+#        super().__init__(*args, **kwargs)
+#
+#        cls = bases.DataComponent
+#        self.components = bases.DataComponentList(cls(), cls(), cls())
+#
+#    @property
+#    def extractor(self):
+#        return self.components[0]
+#
+#    @extractor.setter
+#    def extractor(self, val):
+#        assert isinstance(val, bases.DataExtractorBase)
+#        self.components[0] = val
+#
+#    @property
+#    def processor(self):
+#        return self.components[1]
+#
+#    @processor.setter
+#    def processor(self, val):
+#        assert isinstance(val, bases.DataProcessorBase)
+#        self.components[1] = val
+#
+#    @property
+#    def handler(self):
+#        return self.components[2]
+#
+#    @handler.setter
+#    def handler(self, val):
+#        assert isinstance(val, bases.DataHandlerBase)
+#        self.components[2] = val

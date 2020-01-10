@@ -91,31 +91,68 @@ class PrettyReprBaseClass:
         return repr_str
 
 
+# TODO:
+# This works for letting multiple components' inputs point
+# to a single component's output, but doesn't work for letting
+# a single input get fed from multiple outputs. That case seems
+# like a dictionary would work better
+class DataReference():
+    '''
+    Mutable data container that can be used as a pointer
+    '''
+    @property
+    def value(self):
+        return self._value[0]
+
+    @value.setter
+    def value(self, value):
+        self._value[0] = value
+
+    def __init__(self, val=None, **kwargs):
+        self._value = [val]
+
+    def __repr__(self):
+        cls = self.__class__.__name__
+        val = self.value
+        return f'{cls}({repr(val)})'
+
+    def point_to(self, other):
+        assert isinstance(other, self.__class__)
+
+        self._value = other._value
 
 #%%
 class DataComponent(PrettyReprBaseClass):
     '''
     Base class for other data analysis classes
     '''
+    @property
+    def inputs(self):
+        return self._inputs.value
+
+    @inputs.setter
+    def inputs(self, value):
+        self._inputs.value = value
+
+    @property
+    def outputs(self):
+        return self._outputs.value
+
+    @outputs.setter
+    def outputs(self, value):
+        self._outputs.value = value
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.inputs = {}
-        self.outputs = {}
+        self._inputs = DataReference()
+        self._outputs = DataReference()
 
         self.configure(*args, **kwargs)
 
     def configure(self, *args, **kwargs):
         pass
-
-#    def __str__(self):
-#        pass
-        # f'{self.__name__} of class {self.__class__.__name__}
-        #       .subcomponent_1 : {self.subcomponent_1.__name__}
-        #       ...
-        #       .subcomponent_N : {self.subcomponent_N.__name__}
-        #
-        # TODO: figure out how to do this dynamically
 
     def run(self, *args, **kwargs):
         pass
@@ -192,6 +229,19 @@ class DataHandlerBase(DataComponent):
     def handle_data(self, *args, **kwargs):
         ''' Define this in the subclass '''
         print('handling data')
+
+#%%
+def main():
+    #%%
+    x = DataReference(1)
+    print(x, x.value, x._value, id(x), id(x._value))
+
+    y = DataReference(2)
+    print(y, y.value, y._value, id(y), id(y._value))
+
+    y.point_to(x)
+    print(y, y.value, y._value, id(y), id(y._value))
+
 
 
 
